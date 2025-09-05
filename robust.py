@@ -1,0 +1,24 @@
+import time, random
+from litellm import completion, exceptions
+from config import PROVIDER_MODEL as MODEL
+
+# try 4 times if shown error
+for attempt in range(1,4):
+    try:
+        r = completion(
+            model=MODEL,
+            messages=[{"role":"user","content":"Two bullets on gradient descent."}],
+            timeout=20,
+            max_tokens=120,
+        )
+        # complete request
+        print(r.choices[0].message["content"]) 
+        print("USAGE:", getattr(r, "usage", {}))
+        break
+    except exceptions.RateLimitError:
+        wait = (2 ** attempt) + random.random()
+        print(f"Rate limited. Retrying in {wait:.1f}s…")
+        time.sleep(wait)
+    except Exception as e:
+        print("Unexpected:", type(e).__name__, str(e))
+        break
